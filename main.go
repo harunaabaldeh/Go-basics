@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -19,41 +20,45 @@ type User struct {
 	numberOfTickets uint
 }
 
+var wg = sync.WaitGroup{}
+
 func main() {
 
 	greetUsers()
 
-	for {
-		firstName, lastName, email, userTickets := getUserInput()
-		isValidName, isValidEmail, isValidTicketNumber := validateUserInput(firstName, lastName, email, userTickets)
+	firstName, lastName, email, userTickets := getUserInput()
+	isValidName, isValidEmail, isValidTicketNumber := validateUserInput(firstName, lastName, email, userTickets)
 
-		if isValidName && isValidEmail && isValidTicketNumber {
-			bookTicket(firstName, lastName, email, userTickets)
-			go sendTicket(userTickets, firstName, lastName, email)
-			// call function to print first names
-			firstNames := getFirstNames()
-			fmt.Printf("The first names of bookings are: %v\n", firstNames)
+	if isValidName && isValidEmail && isValidTicketNumber {
+		bookTicket(firstName, lastName, email, userTickets)
 
-			if remainingTickets == 0 {
-				// end program
-				fmt.Println("Our confrence is booked out. Come back next year.")
-				break
-			}
-		} else {
-			if !isValidName {
-				fmt.Println("First name and last name must be at least 2 characters long.")
-			}
+		wg.Add(1) // increment the WaitGroup counter by 1
+		go sendTicket(userTickets, firstName, lastName, email)
+		// call function to print first names
+		firstNames := getFirstNames()
+		fmt.Printf("The first names of bookings are: %v\n", firstNames)
 
-			if !isValidEmail {
-				fmt.Println("Email address must contain @ sign.")
-			}
-
-			if !isValidTicketNumber {
-				fmt.Printf("Number of tickets must be between 1 and %v.\n", remainingTickets)
-			}
+		if remainingTickets == 0 {
+			// end program
+			fmt.Println("Our confrence is booked out. Come back next year.")
+			// break
+		}
+	} else {
+		if !isValidName {
+			fmt.Println("First name and last name must be at least 2 characters long.")
 		}
 
+		if !isValidEmail {
+			fmt.Println("Email address must contain @ sign.")
+		}
+
+		if !isValidTicketNumber {
+			fmt.Printf("Number of tickets must be between 1 and %v.\n", remainingTickets)
+		}
+
+		wg.Wait() // wait for all goroutines to finish before exiting the program
 	}
+
 }
 
 func greetUsers() {
@@ -118,4 +123,6 @@ func sendTicket(userTickets uint, firstName string, lastName string, email strin
 	fmt.Println("####################")
 	fmt.Printf("Sending ticket:\n %v to email address:\n %v", ticket, email)
 	fmt.Println("####################")
+
+	wg.Done() // decrement the WaitGroup counter by 1 when the goroutine is done
 }
