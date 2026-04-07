@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 )
 
 var confrenceName string = "Go Confrence"
@@ -28,6 +29,7 @@ func main() {
 
 		if isValidName && isValidEmail && isValidTicketNumber {
 			bookTicket(firstName, lastName, email, userTickets)
+			go sendTicket(userTickets, firstName, lastName, email)
 			// call function to print first names
 			firstNames := getFirstNames()
 			fmt.Printf("The first names of bookings are: %v\n", firstNames)
@@ -108,4 +110,12 @@ func bookTicket(firstName string, lastName string, email string, userTickets uin
 	fmt.Printf("Thank you %v %v for booking %v tickets. You will receive a confirmation email at %v\n", firstName, lastName, userTickets, email)
 	fmt.Printf("%v tickets remaining for %v\n", remainingTickets, confrenceName)
 
+}
+
+func sendTicket(userTickets uint, firstName string, lastName string, email string) {
+	time.Sleep(10 * time.Second) // simulate time taken to send ticket
+	var ticket = fmt.Sprintf("%v tickets for %v %v \n", userTickets, firstName, lastName)
+	fmt.Println("####################")
+	fmt.Printf("Sending ticket:\n %v to email address:\n %v", ticket, email)
+	fmt.Println("####################")
 }
